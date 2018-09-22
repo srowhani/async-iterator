@@ -5,10 +5,7 @@
 ```ts
 function * _sampleIterator(a: number) {
   const b = yield new Promise(
-    resolve => setTimeout(
-      () => resolve(a + 1),
-      1000
-    )
+    r => setTimeout(() => r(a + 1), 1000)
   );
 
   const c = yield function * () {
@@ -23,10 +20,8 @@ function * _sampleIterator(a: number) {
   return e + 1;
 }
 
-const asyncIterator = asyncIteratorFactory<number>(
-  _sampleIterator(1)
-);
+const taskInstance = asyncIteratorFactory(_sampleIterator(1));
 
-const result = await asyncIterator();
+const result = await taskInstance();
 // result = 5
 ```
