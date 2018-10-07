@@ -15,11 +15,7 @@ describe('async-iterator', () => {
         yield d + 1;
       }
 
-      const e = yield () => {
-        return c + 1
-      }
-
-      return e + 1;
+      return c + 1;
     }
 
     const asyncIterator = asyncIteratorFactory<number>(
@@ -28,6 +24,6 @@ describe('async-iterator', () => {
 
     const result = await asyncIterator();
 
-    expect(result).toEqual(5);
+    expect(result).toEqual(4);
   })
 });

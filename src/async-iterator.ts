@@ -3,8 +3,7 @@ import {
   pop,
   isEmpty,
   isPromise,
-  isIterableIterator,
-  isFunction
+  isIterableIterator,  
 } from '@src/util';
 
 export function asyncIteratorFactory<T>(
@@ -31,11 +30,6 @@ export function asyncIteratorFactory<T>(
     if (isIterableIterator<PromiseLike<T>>(value)) {
       iteratorStack.push(value());
       return _asyncIteratorResolver(previousValue);
-    }
-
-    if (isFunction(value)) {
-      const result = value();
-      return _asyncIteratorResolver(result);
     }
 
     return _asyncIteratorResolver(value);
