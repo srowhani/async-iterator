@@ -1,6 +1,11 @@
 import { asyncIteratorFactory, createTaskInstance } from "@src/async-iterator";
 
-const makeDummyRequest = () => new Promise(resolve => setTimeout(() => resolve({ body: 'success', code: 200 }), 100))
+const makeDummyRequest = () => new Promise(
+  resolve => setTimeout(
+    () => resolve({ body: 'success', code: 200 }),
+    1
+  )
+)
 
 describe('async-iterator', () => {
   it('handles async return values', async () => {

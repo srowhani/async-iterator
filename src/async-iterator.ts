@@ -8,13 +8,15 @@ import {
 
 let TASK_INSTANCE_ID = 0
 
+export type AsyncResolver<T> = (p?: PromiseLike<T>) => PromiseLike<T>
+
 export function asyncIteratorFactory<T>(
   baseIterator: IterableIterator<PromiseLike<T>>
-) {
+): AsyncResolver<T> {
   const iteratorStack: IterableIterator<PromiseLike<T>>[] = [ baseIterator ];
-  return function _asyncIteratorResolver (previousValue?: PromiseLike<T>) {
+  return function _asyncIteratorResolver (previousValue?: PromiseLike<T>): PromiseLike<T> {
     if (isEmpty(iteratorStack)) {
-      return previousValue;
+      return previousValue!;
     }
   
     const currentIterator = peek(iteratorStack);
@@ -22,7 +24,6 @@ export function asyncIteratorFactory<T>(
     
     if (done) {
       pop(iteratorStack);
-      return _asyncIteratorResolver(value);
     }
 
     if (isPromise<PromiseLike<T>>(value)) {
@@ -46,7 +47,7 @@ export interface Task<T> {
 }
 
 export function createTaskInstance<T>(
-  baseGenerator: (...generatorArgs) => IterableIterator<any>
+  baseGenerator: (...generatorArgs: any[]) => IterableIterator<any>
 ): Task<T> {
   return {
     lastSuccessful: null,
@@ -57,14 +58,16 @@ export function createTaskInstance<T>(
 
       const taskResolution = taskClosure()
 
-      const chainedPromiseInstance = taskResolution.then(result => {
+      const chainedPromiseInstance = taskResolution.then((result: T) => {
         this.lastSuccessful = result
         return result
       })
 
-      chainedPromiseInstance.id = `task_${++TASK_INSTANCE_ID}`
+      const taggedPromiseInstance: TaskInstance<T> = Object.assign(chainedPromiseInstance, {
+        id: `task_${++TASK_INSTANCE_ID}`
+      })
 
-      return chainedPromiseInstance
+      return taggedPromiseInstance
     }
   }
 
