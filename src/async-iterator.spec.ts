@@ -68,11 +68,33 @@ describe('async-iterator', () => {
     })
 
     const pendingResolve = taskInstance.perform(...expectedResult.args);
-    expect(pendingResolve.id).toEqual('task_1');
+    expect(pendingResolve._id).toEqual('task_1');
 
     const result = await pendingResolve;
 
     expect(result).toEqual(expectedResult);
     expect(taskInstance.lastSuccessful).toEqual(expectedResult);
+  })
+
+  it('task instances are abled to be cancelled if executed', async () => {
+    const taskInstance = createTaskInstance(function * () {
+      const result = yield new Promise(resolve => setTimeout(() => resolve('finished'), 500))
+      return result
+    })
+
+    const pendingResolve = taskInstance.perform();
+    
+    pendingResolve.cancel();
+    
+    let didCancel = false
+    try {
+      await pendingResolve
+    } catch (e) {
+      didCancel = true
+    }
+
+
+    expect(didCancel).toBeTruthy()
+    expect(taskInstance.lastSuccessful).not.toEqual('finished')
   })
 });
