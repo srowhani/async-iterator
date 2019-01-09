@@ -68,7 +68,6 @@ describe('async-iterator', () => {
     })
 
     const pendingResolve = taskInstance.perform(...expectedResult.args);
-    expect(pendingResolve._id).toEqual('task_1');
 
     const result = await pendingResolve;
 
@@ -77,24 +76,39 @@ describe('async-iterator', () => {
   })
 
   it('task instances are abled to be cancelled if executed', async () => {
+    let didCancel = true
     const taskInstance = createTaskInstance(function * () {
       const result = yield new Promise(resolve => setTimeout(() => resolve('finished'), 500))
+      didCancel = false
       return result
     })
 
     const pendingResolve = taskInstance.perform();
     
     pendingResolve.cancel();
-    
-    let didCancel = false
-    try {
-      await pendingResolve
-    } catch (e) {
-      didCancel = true
-    }
-
-
+ 
     expect(didCancel).toBeTruthy()
     expect(taskInstance.lastSuccessful).not.toEqual('finished')
+  })
+
+  it('properly resets long standing tasks if marked as restartable', async () => {
+    let resolvedCount = 0
+    const taskInstance = createTaskInstance<boolean>(function * (valueToResolveTo) {
+      yield new Promise(
+        resolve => setTimeout(() => resolve(valueToResolveTo), 250)
+      )
+
+      return ++resolvedCount
+    }).restartable()
+
+    const queuedJobs = Array(5).fill(null).map(
+      () => taskInstance.perform(true)
+    )
+
+    await Promise.all(queuedJobs)
+
+    expect(taskInstance.lastSuccessful).toBe(1)
+    expect(resolvedCount).toBe(1)
+
   })
 });
